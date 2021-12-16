@@ -1,0 +1,98 @@
+import numpy as np
+import copy
+import itertools
+from scipy import linalg as sLA
+from numpy import linalg as LA
+
+from Gates import *
+from Functions import *
+
+class Qpsi():
+    def __init__(self, N = 2):
+        self.N = N
+        self.coefs = None
+        self.rho = None
+        self.rho_A = None
+        self.rho_B = None
+        self.tensor = None
+        
+    def build_random_state(self):
+        self.coefs = np.random.rand(2**self.N) + 1j*np.random.rand(2**self.N)
+        self.coefs = self.coefs/np.sqrt(np.sum(self.coefs*self.coefs.conj()))
+        self.rho = np.outer(self.coefs, np.conjugate(self.coefs))
+        self.tensor = np.reshape(self.coefs, [2]*int(np.log2(len(self.coefs))))
+        
+    def build_zero_state(self):
+        coefs = np.zeros(2**self.N) + 1j*np.zeros(2**self.N)
+        coefs[0] = 1
+        self.coefs = coefs
+        self.tensor = np.reshape(self.coefs, [2]*int(np.log2(len(self.coefs))))
+        self.rho = np.outer(self.coefs, np.conjugate(self.coefs))
+        
+    def build_H_state(self):
+        coefs = np.ones(2**self.N) + 1j*np.ones(2**self.N)
+        self.coefs = self.coefs/np.sqrt(np.sum(self.coefs*self.coefs.conj()))
+        self.rho = np.outer(self.coefs, np.conjugate(self.coefs))
+        self.tensor = np.reshape(self.coefs, [2]*int(np.log2(len(self.coefs))))
+        
+    def set_coefs(self, coefs):
+        if len(coefs) == 2**self.N:
+            self.coefs = np.array(coefs)
+        self.rho = np.outer(self.coefs, np.conjugate(self.coefs))
+            
+        self.tensor = np.reshape(self.coefs, [2]*int(np.log2(len(self.coefs))))
+            
+        
+    # разбиение на два регистра кубитов:
+    
+    def split_system(self, na, nb):
+        
+#         d = int(2**len(A_axis))
+#         k = int(2**len(B_axis))
+        d = int(2**na)
+        k = int(2**nb)
+     
+        rho = np.outer(self.coefs, np.conjugate(self.coefs))
+        rho = np.reshape(rho, (d,k,d,k))
+        self.rho_A = np.trace(rho, axis1=1, axis2=3)
+        self.rho_B = np.trace(rho, axis1=0, axis2=2)
+
+    def get_rho(self):
+        return self.rho
+
+    def get_A_rho(self):
+        return self.rho_A  
+
+    def get_B_rho(self):
+        return self.rho_B  
+
+        
+    def get_A_coefs(self):
+        s, v = LA.eig(self.rho_A)
+        # A_vec = v[:, 0]
+        A_vec = np.dot(v, s)
+        return A_vec
+    
+    def get_B_coefs(self):
+        s, v = LA.eig(self.rho_B)
+        # B_vec = v[:, 0]
+        B_vec = np.dot(v, s)
+        return B_vec
+            
+    def get_coefs(self):
+        return self.coefs
+    
+    def apply_U(self, U, axis):
+        self.coefs = gate_md(U, self.coefs.copy(), axis)
+        self.tensor = np.reshape(self.coefs, [2]*int(np.log2(len(self.coefs))))
+        
+    def apply_long_Toffoli(self, axis):
+        self.coefs = apply_long_Toffoli(self.coefs.copy(), wires = axis)
+        self.tensor = np.reshape(self.coefs, [2]*int(np.log2(len(self.coefs))))
+
+
+
+      
+        
+        
+        
