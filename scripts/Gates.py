@@ -15,10 +15,10 @@ def expand(matrix, wire, N):
 def expandNq(matrix, wires, N):
     new_matrix = matrix
     for i in range(N):
-        if i>max(wires):
+        if i<min(wires):
             new_matrix = np.kron([[1,0],
                                   [0,1]], new_matrix)
-        elif i<min(wires):
+        elif i>max(wires):
             new_matrix = np.kron(new_matrix, [[1,0],
                                   [0,1]])
             
@@ -54,6 +54,10 @@ def H(wire = 0, N = 1):
 def S(wire = 0, N = 1):
     return expand(np.array([[1, 0],
                     [0, 1j]], dtype=complex), wire, N)
+
+def T(wire = 0, N = 1):
+    return expand(np.array([[1, 0],
+                     [0, np.exp(1j*np.pi/4)]], dtype=complex), wire, N)
 
 def HS(wire = 0, N = 1):
     return expand((1 / np.sqrt(2)) * np.array([[1, 1j],
@@ -92,6 +96,11 @@ def CR(k, wires = [0,1], N = 2):
 #                      [0, 0, 0, np.exp(2 * np.pi * 1j / (2 ** k))]], dtype=complex)
 
 
+def CXa(wires = [1,0], N = 2):
+    return expandNq(np.array([[1, 0, 0, 0],
+                     [0, 0, 0, 1],
+                     [0, 0, 1, 0],
+                     [0, 1, 0, 0]], dtype=complex), wires, N)
 
 def CX(wires = [0,1], N = 2):
     return expandNq(np.array([[1, 0, 0, 0],
@@ -131,9 +140,6 @@ def TOFFOLI(wires = [0,1,2], N = 3):
                      [0, 0, 0, 0, 0, 0, 0, 1],
                      [0, 0, 0, 0, 0, 0, 1, 0]], dtype=complex), wires, N)
 
-def T(wire = 0, N = 1):
-    return expand(np.array([[1, 0],
-                     [0, np.exp(1j*np.pi/4)]], dtype=complex), wire, N)
 
 # Можно использовать как матрицу ошибок:
 def R_matrix(delta =0, theta = 0, phi = 0):
