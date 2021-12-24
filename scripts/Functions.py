@@ -23,75 +23,105 @@ def get_combinations(val):
 # coefs - вектор состояния (коээфициенты)
 # axis - индексы выбранных кубитов
 
-def apply_U(U, coefs, axis):
-    axis = list(reversed(axis)) # Нужно для оценки фазы
-    if ((len(U) != 2**len(axis)) | (len(coefs) < len(U)) | (2**max(axis) > len(coefs))):
-        print('Некорректно задано преобразование')
-        return 0
-    a = coefs.copy()
-    b = [0]*len(a)
-    
-    ax = axis[0]
-    
-    N = len(U)  # размерность преобразования 
-    K = len(coefs) # размерность состояния системы
-    
-    axis_comb = get_combinations(axis)
-    old_ind_set = {K+1}
-    
-    for i in range(K):
-        
-        zero_index = (K-1)
-            
-        for ax in axis:
-            zero_index = zero_index^(1<<ax)
-            
-        zero_index = i&zero_index
-        
-        if zero_index in old_ind_set:
-            continue
-            
-        old_ind_set.add(zero_index)
+# def apply_U(U, coefs, axis):
+#     axis = list(reversed(axis)) # Нужно для оценки фазы
+#     if ((len(U) != 2**len(axis)) | (len(coefs) < len(U)) | (2**max(axis) > len(coefs))):
+#         print('Некорректно задано преобразование')
+#         return 0
+#     a = coefs.copy()
+#     b = [0]*len(a)
 
-                
-        index = zero_index
-        
-        b[index] += a[zero_index]*U[0][0]
-        
-        
-        u1 = 0
-        for ax_list in axis_comb:
-            u1 += 1
-            m = 0
-            for ax in ax_list:
-                m += 1<<ax
+#     ax = axis[0]
 
-            b[index] += a[zero_index^m]*U[0][u1]
-            
+#     N = len(U)  # размерность преобразования 
+#     K = len(coefs) # размерность состояния системы
 
-        u0 = 0
-        for ax_list in axis_comb:
-            u0 += 1
-            r = 0
-            for ax in ax_list:
-                r += 1<<ax
-            
-            index = zero_index^r
-            old_ind_set.add(index)
-            
-            b[index] += a[zero_index]*U[u0][0]
-            
-            
-            
-            u1 = 0
-            for ax1_list in axis_comb:
-                u1 += 1
-                m = 0
-                for ax1 in ax1_list:
-                    m += 1<<ax1
-                b[index] += a[zero_index^m]*U[u0][u1]
-            
-        
+#     axis_comb = get_combinations(axis)
+#     old_ind_set = {K+1}
+
+#     for i in range(K):
+
+#         zero_index = (K-1)
+
+#         for ax in axis:
+#             zero_index = zero_index^(1<<ax)
+
+#         zero_index = i&zero_index
+
+#         if zero_index in old_ind_set:
+#             continue
+
+#         old_ind_set.add(zero_index)
+
+
+#         index = zero_index
+
+#         b[index] += a[zero_index]*U[0][0]
+
+
+#         u1 = 0
+#         for ax_list in axis_comb:
+#             u1 += 1
+#             m = 0
+#             for ax in ax_list:
+#                 m += 1<<ax
+
+#             b[index] += a[zero_index^m]*U[0][u1]
+
+
+#         u0 = 0
+#         for ax_list in axis_comb:
+#             u0 += 1
+#             r = 0
+#             for ax in ax_list:
+#                 r += 1<<ax
+
+#             index = zero_index^r
+#             old_ind_set.add(index)
+
+#             b[index] += a[zero_index]*U[u0][0]
+
+
+
+#             u1 = 0
+#             for ax1_list in axis_comb:
+#                 u1 += 1
+#                 m = 0
+#                 for ax1 in ax1_list:
+#                     m += 1<<ax1
+#                 b[index] += a[zero_index^m]*U[u0][u1]
+
+
+#     return b
+
+# осуществляет m-кубитное преобразование
+# над заданным вектором
+def apply_U(Um, state, nums): 
+    state = np.array(state)
+    dim = state.shape[0]
+    nums = np.flip(nums)
+    n = int(np.log2(dim))
+    m = nums.shape[0]
+    b = np.zeros(dim, dtype=complex)
+    masks = np.zeros(m, dtype=int)
+    masks_m = np.zeros(m, dtype=int)
+    for i in range(m):
+        masks_m[i] = (1 << m-1-i)
+    for i in range(m):
+        masks[i] = (1 << n-1-nums[i])
+    mask = masks.sum()
+    
+    for ind in range(dim):
+        first = 0
+        for i in range(m):
+            first += (int((ind & masks[i]) != 0)<<i)
+        for x in range(2**m):
+            second = 0
+            state_ind = ind - (ind&mask)
+            for i in range(m):
+                second += (int((x & masks_m[i]) != 0) << i)
+                state_ind += (int((x & masks_m[i]) != 0) << n-1-nums[i])
+            b[ind] += state[state_ind]*Um[first, second]
     return b
 
 
