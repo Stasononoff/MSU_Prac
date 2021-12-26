@@ -46,7 +46,10 @@ class Unitary(object):
     
     def get_phi(self):
         return self.phi
-    
+
+p = np.linspace(0,0.7, 100)
+F_сorr_list = 1 - 3.1*p**2 + 2*p**3
+F_no_сorr_list = 1 - p
     
 def build_CU(U):
     CU = np.array([[0,0],
