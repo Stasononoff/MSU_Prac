@@ -6,6 +6,7 @@ from numpy import linalg as LA
 
 from Gates import *
 from Unitary import *
+from un import *
 
 
 # возвращает все комбинации элементов листа без учёта перестановок
